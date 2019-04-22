@@ -24,6 +24,6 @@ module "eks-cluster" {
   aws_region = "us-east-1"
   number_of_instances = 2
   cluster_name = "test-eks-cluster"
-  key_pair_name = "some keys"
+  key_pair_name = "test-key"
   priv_subnets = ["${data.terraform_remote_state.vpc.private-subnet_id}"]
 }

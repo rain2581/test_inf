@@ -138,6 +138,16 @@ set -o xtrace
 /etc/eks/bootstrap.sh --apiserver-endpoint '${aws_eks_cluster.eks-cluster.endpoint}' --b64-cluster-ca '${aws_eks_cluster.eks-cluster.certificate_authority.0.data}' '${var.cluster_name}'
 USERDATA
 }
+#####Create key pairs for node instance
+resource "tls_private_key" "eks-node-keypair" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "aws_key_pair" "generated_key" {
+  key_name   = "${var.key_pair_name}"
+  public_key = "${tls_private_key.eks-node-keypair.public_key_openssh}"
+}
 ################# Autoscaling configuration
 resource "aws_launch_configuration" "eks_autoscaling" {
   associate_public_ip_address = true
@@ -145,6 +155,7 @@ resource "aws_launch_configuration" "eks_autoscaling" {
   image_id                    = "${data.aws_ami.eks-worker.id}"
   instance_type               = "t2.small"
   name_prefix                 = "terraform-eks"
+  key_name 										= "${aws_key_pair.generated_key.key_name}"
 #  security_groups             = ["${aws_security_group.eks-node.id}"]
   user_data_base64            = "${base64encode(local.eks-node-userdata)}"
 
